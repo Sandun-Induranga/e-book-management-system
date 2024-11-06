@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using EBookPvtLtd.Models;
 
 namespace EBookPvtLtd.Data;
 
@@ -21,6 +22,10 @@ public class EBookPvtLtdContext : IdentityDbContext<Users>
         // Add your customizations after calling base.OnModelCreating(builder);
         builder.ApplyConfiguration(new UserEntiryConfiguration());
     }
+
+public DbSet<EBookPvtLtd.Models.Customer> Customer { get; set; } = default!;
+
+public DbSet<EBookPvtLtd.Models.Book> Book { get; set; } = default!;
 }
 
 public class UserEntiryConfiguration : IEntityTypeConfiguration<Users>
