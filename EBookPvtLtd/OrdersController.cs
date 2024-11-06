@@ -8,25 +8,25 @@ using Microsoft.EntityFrameworkCore;
 using EBookPvtLtd.Data;
 using EBookPvtLtd.Models;
 
-namespace EBookPvtLtd.Controllers
+namespace EBookPvtLtd
 {
-    public class CustomersController : Controller
+    public class OrdersController : Controller
     {
         private readonly EBookPvtLtdContext _context;
 
-        public CustomersController(EBookPvtLtdContext context)
+        public OrdersController(EBookPvtLtdContext context)
         {
             _context = context;
         }
 
-        // GET: Customers
+        // GET: Orders
         public async Task<IActionResult> Index()
         {
-            var eBookPvtLtdContext = _context.Customer.Include(c => c.User);
+            var eBookPvtLtdContext = _context.Order.Include(o => o.Customer);
             return View(await eBookPvtLtdContext.ToListAsync());
         }
 
-        // GET: Customers/Details/5
+        // GET: Orders/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -34,49 +34,42 @@ namespace EBookPvtLtd.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customer
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(m => m.CustomerId == id);
-            if (customer == null)
+            var order = await _context.Order
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(m => m.OrderId == id);
+            if (order == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(order);
         }
 
-        // GET: Customers/Create
+        // GET: Orders/Create
         public IActionResult Create()
         {
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId");
             return View();
         }
 
-        // POST: Customers/Create
+        // POST: Orders/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("CustomerId,UserId,FirstName,LastName,Email,Phone,Address,JoinedDate")] Customer customer)
+        public async Task<IActionResult> Create([Bind("OrderId,CustomerId,OrderDate,Status")] Order order)
         {
-            try
+            if (ModelState.IsValid)
             {
-                if (ModelState.IsValid)
-                {
-                    _context.Add(customer);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                }
-                ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            } catch (Exception ex)
-            {
-               Console.WriteLine(ex.Message);
+                _context.Add(order);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
             }
-            return View(customer);
-
+            ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId", order.CustomerId);
+            return View(order);
         }
 
-        // GET: Customers/Edit/5
+        // GET: Orders/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -84,23 +77,23 @@ namespace EBookPvtLtd.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customer.FindAsync(id);
-            if (customer == null)
+            var order = await _context.Order.FindAsync(id);
+            if (order == null)
             {
                 return NotFound();
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            return View(customer);
+            ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId", order.CustomerId);
+            return View(order);
         }
 
-        // POST: Customers/Edit/5
+        // POST: Orders/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("CustomerId,UserId,FirstName,LastName,Email,Phone,Address,JoinedDate")] Customer customer)
+        public async Task<IActionResult> Edit(int id, [Bind("OrderId,CustomerId,OrderDate,Status")] Order order)
         {
-            if (id != customer.CustomerId)
+            if (id != order.OrderId)
             {
                 return NotFound();
             }
@@ -109,12 +102,12 @@ namespace EBookPvtLtd.Controllers
             {
                 try
                 {
-                    _context.Update(customer);
+                    _context.Update(order);
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!CustomerExists(customer.CustomerId))
+                    if (!OrderExists(order.OrderId))
                     {
                         return NotFound();
                     }
@@ -125,11 +118,11 @@ namespace EBookPvtLtd.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["UserId"] = new SelectList(_context.Users, "Id", "Id", customer.UserId);
-            return View(customer);
+            ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId", order.CustomerId);
+            return View(order);
         }
 
-        // GET: Customers/Delete/5
+        // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -137,35 +130,35 @@ namespace EBookPvtLtd.Controllers
                 return NotFound();
             }
 
-            var customer = await _context.Customer
-                .Include(c => c.User)
-                .FirstOrDefaultAsync(m => m.CustomerId == id);
-            if (customer == null)
+            var order = await _context.Order
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(m => m.OrderId == id);
+            if (order == null)
             {
                 return NotFound();
             }
 
-            return View(customer);
+            return View(order);
         }
 
-        // POST: Customers/Delete/5
+        // POST: Orders/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var customer = await _context.Customer.FindAsync(id);
-            if (customer != null)
+            var order = await _context.Order.FindAsync(id);
+            if (order != null)
             {
-                _context.Customer.Remove(customer);
+                _context.Order.Remove(order);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool CustomerExists(int id)
+        private bool OrderExists(int id)
         {
-            return _context.Customer.Any(e => e.CustomerId == id);
+            return _context.Order.Any(e => e.OrderId == id);
         }
     }
 }

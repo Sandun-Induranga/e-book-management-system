@@ -26,6 +26,8 @@ public class EBookPvtLtdContext : IdentityDbContext<Users>
 public DbSet<EBookPvtLtd.Models.Customer> Customer { get; set; } = default!;
 
 public DbSet<EBookPvtLtd.Models.Book> Book { get; set; } = default!;
+
+public DbSet<EBookPvtLtd.Models.Order> Order { get; set; } = default!;
 }
 
 public class UserEntiryConfiguration : IEntityTypeConfiguration<Users>
