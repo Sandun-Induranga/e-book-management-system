@@ -11,4 +11,3 @@ public class Users : IdentityUser
 {
     public string Role { get; set; } = "Customer";
 }
-
