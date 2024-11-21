@@ -12,5 +12,6 @@ namespace EBookPvtLtd.Models
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public string Description { get; set; }
+        public string ImagePath { get; set; } // New field for the image
     }
 }

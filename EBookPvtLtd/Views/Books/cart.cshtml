@@ -1,0 +1,87 @@
+﻿@{
+    ViewData["Title"] = "Cart";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Your Cart</h1>
+
+<div id="cart-container">
+    <p>Your cart is empty.</p>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Index" class="btn btn-primary">Continue Shopping</a>
+    <button id="checkout-button" class="btn btn-success" style="display: none;">Proceed to Checkout</button>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cartContainer = document.getElementById('cart-container');
+            const checkoutButton = document.getElementById('checkout-button');
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p>Your cart is empty.</p>';
+            } else {
+                fetch('/Books/GetCartBooks', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(cart)
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        cartContainer.innerHTML = '';
+                        let totalPrice = 0;
+
+                        data.forEach(book => {
+                            totalPrice += book.price;
+
+                            cartContainer.innerHTML += `
+                                    <div class="card mb-3">
+                                        <div class="row no-gutters">
+                                            <div class="col-md-4">
+                                                <img src="${book.imagePath}" class="card-img" alt="Book Image">
+                                            </div>
+                                            <div class="col-md-8">
+                                                <div class="card-body">
+                                                    <h5 class="card-title">${book.title}</h5>
+                                                    <p class="card-text">Author: ${book.author}</p>
+                                                    <p class="card-text">Price: $${book.price.toFixed(2)}</p>
+                                                    <button class="btn btn-danger btn-sm remove-from-cart" data-id="${book.bookId}">Remove</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                        });
+
+                        cartContainer.innerHTML += `
+                                <div class="mt-3">
+                                    <h4>Total Price: $${totalPrice.toFixed(2)}</h4>
+                                </div>
+                            `;
+
+                        checkoutButton.style.display = 'block';
+
+                        // Add event listener to remove items from cart
+                        document.querySelectorAll('.remove-from-cart').forEach(button => {
+                            button.addEventListener('click', function () {
+                                const bookId = this.getAttribute('data-id');
+                                const updatedCart = cart.filter(id => id != bookId);
+                                localStorage.setItem('cart', JSON.stringify(updatedCart));
+                                location.reload();
+                            });
+                        });
+                    });
+            }
+
+            // Add event listener for checkout
+            checkoutButton.addEventListener('click', function () {
+                alert('Checkout functionality is under development!');
+            });
+        });
+    </script>
+}

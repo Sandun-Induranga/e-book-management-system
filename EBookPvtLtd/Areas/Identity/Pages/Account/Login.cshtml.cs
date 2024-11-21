@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using EBookPvtLtd.Data;
 
 namespace EBookPvtLtd.Areas.Identity.Pages.Account
 {
@@ -23,12 +24,14 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
         private readonly SignInManager<Users> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<Users> _userManager;
+        private readonly EBookPvtLtdContext _context;
 
-        public LoginModel(SignInManager<Users> signInManager, ILogger<LoginModel> logger, UserManager<Users> userManager)
+        public LoginModel(SignInManager<Users> signInManager, ILogger<LoginModel> logger, UserManager<Users> userManager, EBookPvtLtdContext context)
         {
             _signInManager = signInManager;
             _logger = logger;
             _userManager = userManager;
+            _context = context;
         }
 
         /// <summary>
@@ -164,6 +167,13 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                         }
                         else if (user.Role == "Customer")
                         {
+                            // save customer id to local storage
+                            var customer = _context.Customer.Where(c => c.UserId == user.Id).FirstOrDefault();
+                            if (customer != null)
+                            {
+                                TempData["CustomerId"] = customer.CustomerId;
+                            }
+
                             return RedirectToAction("CustomerDashboard", "Customer"); // Redirect to Customer Dashboard
                         }
                         return LocalRedirect(returnUrl);

@@ -5,62 +5,55 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Index</h1>
+<h1>Books</h1>
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New Book</a>
 </p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Author)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Genre)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Price)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Quantity)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Author)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Genre)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Price)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Quantity)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.BookId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.BookId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.BookId">Delete</a>
-            </td>
-        </tr>
+
+<div class="row">
+    @foreach (var book in Model)
+    {
+        <div class="col-md-3">
+            <div class="card mb-4 shadow-sm">
+                <img class="card-img-top" src="@book.ImagePath" alt="Book Image" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h5 class="card-title">@book.Title</h5>
+                    <p class="card-text">Author: @book.Author</p>
+                    <p class="card-text">Genre: @book.Genre</p>
+                    <p class="card-text">Price: $@book.Price</p>
+                    <p class="card-text">Available: @book.Quantity</p>
+                    <p class="card-text"><small class="text-muted">@book.Description</small></p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Details" asp-route-id="@book.BookId" class="btn btn-info btn-sm">Details</a>
+                        <a asp-action="Edit" asp-route-id="@book.BookId" class="btn btn-warning btn-sm">Edit</a>
+                        <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<a asp-action="Cart" class="btn btn-secondary mt-3">Go to Cart</a>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            document.querySelectorAll('.add-to-cart').forEach(button => {
+                button.addEventListener('click', function () {
+                    const bookId = this.getAttribute('data-id');
+                    if (!cart.includes(bookId)) {
+                        cart.push(bookId);
+                        localStorage.setItem('cart', JSON.stringify(cart));
+                        alert('Book added to cart!');
+                    } else {
+                        alert('This book is already in your cart.');
+                    }
+                });
+            });
+        });
+    </script>
 }
-    </tbody>
-</table>
