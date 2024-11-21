@@ -52,13 +52,6 @@ namespace EBookPvtLtd.Controllers
             return View();
         }
 
-        [HttpPost]
-        public JsonResult GetCartBooks([FromBody] List<int> cart)
-        {
-            var books = _context.Book.Where(b => cart.Contains(b.BookId)).ToList();
-            return Json(books);
-        }
-
         // POST: Books/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -107,7 +100,38 @@ namespace EBookPvtLtd.Controllers
             // return View(book);
         }
 
+        [HttpPost]
+        public JsonResult GetCartBooks([FromBody] List<CartItem> cartItems)
+        {
+            try
+            {
+                if (cartItems == null || cartItems.Count == 0)
+                {
+                    return Json(new List<object>()); // Return an empty list if the cart is empty
+                }
 
+                // Extract BookIds from cartItems
+                var bookIds = cartItems.Select(ci => ci.BookId).ToList();
+
+                // Fetch books from the database
+                var books = _context.Book
+                    .Where(b => bookIds.Contains(b.BookId))
+                    .Select(b => new
+                    {
+                        bookId = b.BookId,
+                        title = b.Title,
+                        price = b.Price,
+                        imagePath = b.ImagePath
+                    }).ToList();
+
+                return Json(books);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error in GetCartBooks: {ex.Message}");
+                return Json(new { error = "Failed to load cart items." });
+            }
+        }
 
         // GET: Books/Edit/5
         public async Task<IActionResult> Edit(int? id)

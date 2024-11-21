@@ -44,14 +44,19 @@
 
             document.querySelectorAll('.add-to-cart').forEach(button => {
                 button.addEventListener('click', function () {
-                    const bookId = this.getAttribute('data-id');
-                    if (!cart.includes(bookId)) {
-                        cart.push(bookId);
-                        localStorage.setItem('cart', JSON.stringify(cart));
-                        alert('Book added to cart!');
+                    const bookId = parseInt(this.getAttribute('data-id'));
+                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+                    // Check if the book is already in the cart
+                    const existingItem = cart.find(item => item.BookId === bookId);
+                    if (existingItem) {
+                        existingItem.Quantity += 1; // Increment the quantity
                     } else {
-                        alert('This book is already in your cart.');
+                        cart.push({ BookId: bookId, Quantity: 1 }); // Add new item with Quantity = 1
                     }
+
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    alert('Item added to cart!');
                 });
             });
         });

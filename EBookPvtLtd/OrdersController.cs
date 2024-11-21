@@ -13,10 +13,12 @@ namespace EBookPvtLtd
     public class OrdersController : Controller
     {
         private readonly EBookPvtLtdContext _context;
+        private readonly ILogger<EBookPvtLtdContext> _logger;
 
-        public OrdersController(EBookPvtLtdContext context)
+        public OrdersController(EBookPvtLtdContext context, ILogger<EBookPvtLtdContext> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Orders
@@ -122,6 +124,55 @@ namespace EBookPvtLtd
             return View(order);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> Checkout([FromBody] List<CartItem> cartItems)
+        {
+            _logger.LogInformation("Checkout initiated.");
+
+            // Assuming customer is logged in and we have their ID
+            int customerId = TempData["CustomerId"] as int? ?? 0;
+            _logger.LogInformation("Customer ID: {0}", customerId);
+
+            // Create a new order
+            var order = new Order
+            {
+                CustomerId = customerId,
+                OrderDate = DateTime.Now,
+                Status = "Pending",
+            };
+
+            _logger.LogInformation("Order created.");
+
+            _context.Order.Add(order);
+            await _context.SaveChangesAsync();
+
+            // Add order items
+            foreach (var item in cartItems)
+            {
+                var book = await _context.Book.FindAsync(item.BookId);
+                if (book != null)
+                {
+                    var orderItem = new OrderItem
+                    {
+                        OrderId = order.OrderId,
+                        BookId = item.BookId,
+                        Quantity = item.Quantity,
+                        Price = book.Price * item.Quantity,
+                    };
+
+                    _context.OrderItem.Add(orderItem);
+                }
+            }
+
+            _logger.LogInformation("Order items added.");
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("Checkout completed.");
+
+            return Json(new { Success = true, OrderId = order.OrderId });
+        }
+
         // GET: Orders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
@@ -161,4 +212,10 @@ namespace EBookPvtLtd
             return _context.Order.Any(e => e.OrderId == id);
         }
     }
+}
+
+public class CartItem
+{
+    public int BookId { get; set; }
+    public int Quantity { get; set; }
 }
