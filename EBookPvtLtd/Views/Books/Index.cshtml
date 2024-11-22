@@ -1,47 +1,53 @@
 ﻿@model IEnumerable<EBookPvtLtd.Models.Book>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Books";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1>Books</h1>
+<div class="container py-5">
+    <h1 class="text-center mb-4">Our Book Collection</h1>
 
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New Book</a>
-</p>
+    <p class="text-end">
+        <a asp-action="Create" class="btn btn-primary">Create New Book</a>
+    </p>
 
-<div class="row">
-    @foreach (var book in Model)
-    {
-        <div class="col-md-3">
-            <div class="card mb-4 shadow-sm">
-                <img class="card-img-top" src="@book.ImagePath" alt="Book Image" style="height: 200px; object-fit: cover;">
-                <div class="card-body">
-                    <h5 class="card-title">@book.Title</h5>
-                    <p class="card-text">Author: @book.Author</p>
-                    <p class="card-text">Genre: @book.Genre</p>
-                    <p class="card-text">Price: $@book.Price</p>
-                    <p class="card-text">Available: @book.Quantity</p>
-                    <p class="card-text"><small class="text-muted">@book.Description</small></p>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <a asp-action="Details" asp-route-id="@book.BookId" class="btn btn-info btn-sm">Details</a>
-                        <a asp-action="Edit" asp-route-id="@book.BookId" class="btn btn-warning btn-sm">Edit</a>
-                        <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
+    <div class="row">
+        @foreach (var book in Model)
+        {
+            <div class="col-md-3">
+                <div class="card mb-4 shadow-sm">
+                    <img class="card-img-top" src="@book.ImagePath" alt="@book.Title" style="height: 200px; object-fit: cover;">
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">@book.Title</h5>
+                        <p class="card-text"><strong>Author:</strong> @book.Author</p>
+                        <p class="card-text"><strong>Genre:</strong> @book.Genre</p>
+                        <p class="card-text text-success"><strong>Price:</strong> $@book.Price</p>
+                        <p class="card-text text-muted"><strong>Available:</strong> @book.Quantity</p>
+                        <p class="card-text"><small class="text-muted text-truncate">@book.Description</small></p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a asp-action="Details" asp-route-id="@book.BookId" class="btn btn-info btn-sm">Details</a>
+                            <a asp-action="Edit" asp-route-id="@book.BookId" class="btn btn-warning btn-sm">Edit</a>
+                            <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    }
-</div>
+        }
+    </div>
 
-<a asp-action="Cart" class="btn btn-secondary mt-3">Go to Cart</a>
+    <div class="text-center mt-4">
+        <a asp-action="Cart" class="btn btn-secondary">Go to Cart</a>
+    </div>
+</div>
 
 @section Scripts {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize cart from localStorage or create an empty one
             const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
+            // Attach click event to Add to Cart buttons
             document.querySelectorAll('.add-to-cart').forEach(button => {
                 button.addEventListener('click', function () {
                     const bookId = parseInt(this.getAttribute('data-id'));
@@ -55,6 +61,7 @@
                         cart.push({ BookId: bookId, Quantity: 1 }); // Add new item with Quantity = 1
                     }
 
+                    // Save cart back to localStorage
                     localStorage.setItem('cart', JSON.stringify(cart));
                     alert('Item added to cart!');
                 });
