@@ -30,6 +30,8 @@ public DbSet<EBookPvtLtd.Models.Book> Book { get; set; } = default!;
 public DbSet<EBookPvtLtd.Models.Order> Order { get; set; } = default!;
 
 public DbSet<EBookPvtLtd.Models.OrderItem> OrderItem { get; set; } = default!;
+
+public DbSet<EBookPvtLtd.Models.Feedback> Feedback { get; set; } = default!;
 }
 
 public class UserEntiryConfiguration : IEntityTypeConfiguration<Users>

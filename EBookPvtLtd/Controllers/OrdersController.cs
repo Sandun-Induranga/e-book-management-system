@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using EBookPvtLtd.Data;
 using EBookPvtLtd.Models;
 
-namespace EBookPvtLtd
+namespace EBookPvtLtd.Controllers
 {
     public class OrdersController : Controller
     {
@@ -170,7 +170,7 @@ namespace EBookPvtLtd
 
             _logger.LogInformation("Checkout completed.");
 
-            return Json(new { Success = true, OrderId = order.OrderId });
+            return Json(new { Success = true, order.OrderId });
         }
 
         // GET: Orders/Delete/5

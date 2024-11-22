@@ -1,0 +1,29 @@
+﻿@model IEnumerable<EBookPvtLtd.Models.Feedback>
+
+@{
+    ViewData["Title"] = "Feedback";
+}
+
+<h1>Feedback for Book</h1>
+
+<div>
+    <a asp-action="Create" asp-route-bookId="@ViewBag.BookId" class="btn btn-primary mb-3">Add Feedback</a>
+</div>
+
+@if (!Model.Any())
+{
+    <p>No feedback available for this book.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var feedback in Model)
+        {
+            <div class="list-group-item">
+                <h5>@feedback.CustomerName</h5>
+                <p>@feedback.Content</p>
+                <small class="text-muted">Posted on: @feedback.CreatedAt.ToString("f")</small>
+            </div>
+        }
+    </div>
+}

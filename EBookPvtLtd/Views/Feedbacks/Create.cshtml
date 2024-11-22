@@ -1,0 +1,26 @@
+﻿@model EBookPvtLtd.Models.Feedback
+
+@{
+    ViewData["Title"] = "Add Feedback";
+}
+
+<h1>Add Feedback</h1>
+
+<div class="card shadow-sm p-4">
+    <form asp-action="Create" asp-route-bookId="@ViewBag.BookId">
+        <div class="mb-3">
+            <label asp-for="CustomerName" class="form-label">Your Name</label>
+            <input asp-for="CustomerName" class="form-control" />
+            <span asp-validation-for="CustomerName" class="text-danger"></span>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Content" class="form-label">Feedback</label>
+<textarea asp-for="Content" class="form-control" rows="5"></textarea>
+            <span asp-validation-for="Content" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success">Submit Feedback</button>
+        <a asp-action="Index" asp-route-bookId="@ViewBag.BookId" class="btn btn-secondary">Back to Feedback</a>
+    </form>
+</div>
