@@ -28,6 +28,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
         {
             await _signInManager.SignOutAsync();
             _logger.LogInformation("User logged out.");
+            TempData["Role"] = null;
             if (returnUrl != null)
             {
                 return LocalRedirect(returnUrl);

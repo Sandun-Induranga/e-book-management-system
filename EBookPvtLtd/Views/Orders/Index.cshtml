@@ -1,51 +1,44 @@
 ﻿@model IEnumerable<EBookPvtLtd.Models.Order>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = ViewBag.Title;
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<h1 class="mt-2">Manage Orders</h1>
+<h1 class="mt-2">@ViewData["Title"]</h1>
 
-<!--<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-</p>-->
-<table class="table">
+<table class="table table-striped table-hover">
     <thead>
         <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.OrderDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Customer)
-            </th>
+            <th>@Html.DisplayNameFor(model => model.OrderDate)</th>
+            <th>@Html.DisplayNameFor(model => model.Status)</th>
+            <th>@Html.DisplayNameFor(model => model.Customer.FirstName)</th>
             <th class="text-center">Actions</th>
-            <th></th>
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.OrderDate)
-            </td>
-            <td>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.OrderDate)</td>
+                <td>
                     <span class="badge @((item.Status == "Completed") ? "bg-success" : (item.Status == "Pending") ? "bg-warning" : "bg-secondary")">
                         @Html.DisplayFor(modelItem => item.Status)
                     </span>
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Customer.FirstName)
-            </td>
-            <td>
-                    <a asp-action="Edit" asp-route-id="@item.OrderId" class="btn btn-warning btn-sm">Edit</a>
+                </td>
+                <td>@Html.DisplayFor(modelItem => item.Customer.FirstName)</td>
+                <td class="text-center">
+                    @if (ViewBag.Role == null)
+                    {
+                        <a asp-action="Edit" asp-route-id="@item.OrderId" class="btn btn-warning btn-sm">Edit</a>
+                    }
                     <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-info btn-sm">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.OrderId" class="btn btn-danger btn-sm">Delete</a>
-            </td>
-        </tr>
-}
+                    @if (ViewBag.Role != "Admin")
+                    {
+                        <a asp-action="Delete" asp-route-id="@item.OrderId" class="btn btn-danger btn-sm">Delete</a>
+                    }
+                </td>
+            </tr>
+        }
     </tbody>
 </table>

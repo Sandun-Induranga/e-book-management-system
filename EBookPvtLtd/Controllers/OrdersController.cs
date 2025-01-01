@@ -18,10 +18,31 @@ namespace EBookPvtLtd.Controllers
         }
 
         // GET: Orders
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
-            var eBookPvtLtdContext = _context.Order.Include(o => o.Customer);
-            return View(await eBookPvtLtdContext.ToListAsync());
+            var role = TempData["Role"] as string;
+            var userId = TempData["CustomerId"] as int? ?? 0;
+
+            IEnumerable<Order> orders;
+
+            if (role == "Customer")
+            {
+                orders = _context.Order
+                    .Include(o => o.Customer)
+                    .Where(o => o.Customer.CustomerId == userId) // Fetch orders for the logged-in customer
+                    .ToList();
+                ViewBag.Title = "My Orders";
+            }
+            else
+            {
+                orders = _context.Order
+                    .Include(o => o.Customer)
+                    .ToList();
+                ViewBag.Title = "Manage Orders";
+            }
+
+            ViewBag.Role = role; // Pass the role to the view
+            return View(orders);
         }
 
         // GET: Orders/Details/5

@@ -173,10 +173,11 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                             if (customer != null)
                             {
                                 TempData["CustomerId"] = customer.CustomerId;
+                                Console.WriteLine(customer.CustomerId);
                                 TempData["Role"] = "Customer";
                             }
 
-                            return RedirectToAction("CustomerDashboard", "Customer"); // Redirect to Customer Dashboard
+                            return RedirectToAction("Index", "Books"); // Redirect to Customer Dashboard
                         }
                         return LocalRedirect(returnUrl);
                     }
