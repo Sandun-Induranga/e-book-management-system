@@ -10,6 +10,7 @@ namespace EBookPvtLtd.Controllers
     {
         private readonly EBookPvtLtdContext _context;
         private readonly ILogger<EBookPvtLtdContext> _logger;
+        static int customerId = 0;
 
         public OrdersController(EBookPvtLtdContext context, ILogger<EBookPvtLtdContext> logger)
         {
@@ -20,28 +21,28 @@ namespace EBookPvtLtd.Controllers
         // GET: Orders
         public IActionResult Index()
         {
-            var role = TempData["Role"] as string;
-            var userId = TempData["CustomerId"] as int? ?? 0;
-
-            IEnumerable<Order> orders;
-
-            if (role == "Customer")
-            {
-                orders = _context.Order
-                    .Include(o => o.Customer)
-                    .Where(o => o.Customer.CustomerId == userId) // Fetch orders for the logged-in customer
-                    .ToList();
-                ViewBag.Title = "My Orders";
-            }
-            else
-            {
-                orders = _context.Order
+            IEnumerable<Order> orders = _context.Order
                     .Include(o => o.Customer)
                     .ToList();
                 ViewBag.Title = "Manage Orders";
+          
+            return View(orders);
+        }
+
+        public IActionResult CustomerIndex()
+        {
+            var userId = TempData["CustomerId"] as int? ?? 0;
+
+            if(customerId == 0)
+            {
+                customerId = userId;
             }
 
-            ViewBag.Role = role; // Pass the role to the view
+            IEnumerable<Order> orders = _context.Order
+                    .Include(o => o.Customer)
+                    .Where(o => o.Customer.CustomerId == customerId) // Fetch orders for the logged-in customer
+                    .ToList();
+                ViewBag.Title = "My Orders";
             return View(orders);
         }
 

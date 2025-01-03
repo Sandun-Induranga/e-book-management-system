@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Report Results";
+    var reportType = TempData["ReportType"]?.ToString();
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<h1>@reportType Results</h1>
+
+@if (Model.Count > 0)
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+               <th>OrderId</th>
+               <th>CustomerId</th>
+               <th>OrderDate</th>
+               <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.OrderId</td>
+                    <td>@item.CustomerId</td>
+                    <td>@item.OrderDate</td>
+                    <td>@item.Status</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <form method="post" asp-action="ExportToExcel">
+        <button type="submit" class="btn btn-success mt-3">
+            Download Excel Report
+        </button>
+    </form>
+}
+else
+{
+    <p>No data found for the selected report and date range.</p>
+}

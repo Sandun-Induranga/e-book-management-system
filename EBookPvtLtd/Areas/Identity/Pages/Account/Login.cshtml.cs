@@ -164,7 +164,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                         if (user.Role == "Admin")
                         {
                             TempData["Role"] = "Admin";
-                            return RedirectToAction("AdminDashboard", "Admin"); // Redirect to Admin Dashboard
+                            return RedirectToAction("Index", "Admin"); // Redirect to Admin Dashboard
                         }
                         else if (user.Role == "Customer")
                         {
@@ -177,7 +177,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                                 TempData["Role"] = "Customer";
                             }
 
-                            return RedirectToAction("Index", "Books"); // Redirect to Customer Dashboard
+                            return RedirectToAction("CustomerIndex", "Books"); // Redirect to Customer Dashboard
                         }
                         return LocalRedirect(returnUrl);
                     }

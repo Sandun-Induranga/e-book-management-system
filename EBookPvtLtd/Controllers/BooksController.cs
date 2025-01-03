@@ -22,6 +22,11 @@ namespace EBookPvtLtd.Controllers
             return View(await _context.Book.ToListAsync());
         }
 
+        public async Task<IActionResult> CustomerIndex()
+        {
+            return View(await _context.Book.ToListAsync());
+        }
+
         // GET: Books/Details/5
         public async Task<IActionResult> Details(int? id)
         {

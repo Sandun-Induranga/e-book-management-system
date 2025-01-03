@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Generate Reports";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h1>Generate Reports</h1>
+<form method="post" asp-action="GenerateReport">
+    <div class="mb-3">
+        <label for="reportType" class="form-label">Report Type</label>
+        <select id="reportType" name="reportType" class="form-select">
+            <option value="Sales">Sales Report</option>
+            <option value="UserActivity">User Activity Report</option>
+        </select>
+    </div>
+
+    <div class="mb-3">
+        <label for="startDate" class="form-label">Start Date</label>
+        <input type="date" id="startDate" name="startDate" class="form-control" required />
+    </div>
+
+    <div class="mb-3">
+        <label for="endDate" class="form-label">End Date</label>
+        <input type="date" id="endDate" name="endDate" class="form-control" required />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Generate Report</button>
+</form>

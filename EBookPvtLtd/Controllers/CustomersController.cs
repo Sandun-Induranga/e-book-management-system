@@ -167,5 +167,10 @@ namespace EBookPvtLtd.Controllers
         {
             return _context.Customer.Any(e => e.CustomerId == id);
         }
+
+        public IActionResult Customer()
+        {
+            return View();
+        }
     }
 }

@@ -13,31 +13,6 @@
             text-shadow: 2px 2px 5px rgba(0, 0, 0, 0.7);
             padding: 100px 20px;
         }
-
-            .hero-section h1 {
-                font-size: 3rem;
-                font-weight: bold;
-            }
-
-            .hero-section p {
-                font-size: 1.5rem;
-            }
-
-        .card img {
-            height: 200px;
-            object-fit: cover;
-        }
-
-        .footer {
-            background-color: #343a40;
-            color: white;
-            padding: 20px 0;
-        }
-
-            .footer a {
-                color: #d1d1d1;
-                text-decoration: none;
-            }
     </style>
 </head>
 <body>
@@ -51,11 +26,16 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link active" href="#">Home</a>
+                        <a class="nav-link" href="/Books/CustomerIndex">Browse Books</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Books/Cart">My Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/Orders/CustomerIndex">Order History</a>
                     </li>
                 </ul>
                 <div>
-                    <!-- login partial -->
                     <partial name="_LoginPartial" />
                 </div>
             </div>
