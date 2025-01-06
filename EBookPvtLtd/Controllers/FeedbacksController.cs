@@ -75,4 +75,42 @@ public class FeedbacksController : Controller
 
         return RedirectToAction("Index", new { bookId });
     }
+
+    [HttpGet]
+    public IActionResult GetFeedback(int bookId)
+    {
+        var feedbacks = _context.Feedback
+            .Where(f => f.BookId == bookId)
+            .OrderByDescending(f => f.CreatedAt)
+            .Select(f => new
+            {
+                f.CustomerName,
+                f.Content,
+                f.CreatedAt
+            })
+            .ToList();
+
+        return Json(feedbacks);
+    }
+
+    [HttpPost]
+    public IActionResult AddFeedback([FromBody] Feedback feedback)
+    {
+        if (ModelState.IsValid)
+        {
+            try
+            {
+                feedback.CreatedAt = DateTime.Now; // Ensure CreatedAt is set
+                _context.Feedback.Add(feedback);
+                _context.SaveChanges();
+                return Ok(new { Success = true, Message = "Feedback added successfully!" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Success = false, Message = "Error saving feedback.", Error = ex.Message });
+            }
+        }
+
+        return BadRequest(new { Success = false, Message = "Invalid feedback data.", Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+    }
 }

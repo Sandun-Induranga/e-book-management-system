@@ -7,11 +7,11 @@ namespace EBookPvtLtd.Models
     {
         [Key]
         public int OrderId { get; set; }
-        public int CustomerId { get; set; } // Foreign key to Customer
+        public int CustomerId { get; set; }
         public DateTime OrderDate { get; set; } = DateTime.Now;
-        public string Status { get; set; } = "Pending"; // Default status
+        public string Status { get; set; } = "Pending";
+        public decimal TotalAmount { get; set; }
 
-        // Navigation properties
         public Customer Customer { get; set; }
         public ICollection<OrderItem> OrderItems { get; set; }
     }

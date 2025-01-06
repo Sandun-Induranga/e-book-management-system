@@ -25,6 +25,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
         private readonly ILogger<LoginModel> _logger;
         private readonly UserManager<Users> _userManager;
         private readonly EBookPvtLtdContext _context;
+        public static int customerId = 0;
 
         public LoginModel(SignInManager<Users> signInManager, ILogger<LoginModel> logger, UserManager<Users> userManager, EBookPvtLtdContext context)
         {
@@ -172,6 +173,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                             var customer = _context.Customer.Where(c => c.UserId == user.Id).FirstOrDefault();
                             if (customer != null)
                             {
+                                customerId = customer.CustomerId;
                                 TempData["CustomerId"] = customer.CustomerId;
                                 Console.WriteLine(customer.CustomerId);
                                 TempData["Role"] = "Customer";

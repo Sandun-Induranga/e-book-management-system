@@ -130,7 +130,7 @@
                         if (data.success) {
                             alert("Order placed successfully! Order ID: " + data.orderId);
                             localStorage.removeItem('cart'); // Clear cart
-                            window.location.href = "/Orders"; // Redirect to orders page
+                            window.location.href = "/Orders/CustomerIndex"; // Redirect to orders page
                         } else {
                             alert("Failed to place order. Please try again.");
                         }

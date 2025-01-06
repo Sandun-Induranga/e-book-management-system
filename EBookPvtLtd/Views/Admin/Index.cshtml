@@ -4,19 +4,13 @@
 }
 
 <div class="container py-5">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Admin Dashboard</h1>
-        <a asp-area="Admin" asp-controller="Account" asp-action="Logout" class="btn btn-danger">Logout</a>
-    </div>
-
     <!-- Cards Section -->
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h5 class="card-title">Total Books</h5>
-                    <h2 class="text-primary">1,245</h2>
+                    <h2 class="text-primary">@ViewBag.DashboardData.TotalBooks</h2>
                     <p class="card-text">Manage and add new books to the collection.</p>
                     <a asp-area="Admin" asp-controller="Books" asp-action="Index" class="btn btn-primary btn-sm">View Books</a>
                 </div>
@@ -26,7 +20,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h5 class="card-title">Total Users</h5>
-                    <h2 class="text-primary">540</h2>
+                    <h2 class="text-primary">@ViewBag.DashboardData.TotalUsers</h2>
                     <p class="card-text">View and manage registered users.</p>
                     <a asp-area="Admin" asp-controller="Users" asp-action="Index" class="btn btn-primary btn-sm">View Users</a>
                 </div>
@@ -36,7 +30,7 @@
             <div class="card shadow-sm border-0">
                 <div class="card-body">
                     <h5 class="card-title">Total Orders</h5>
-                    <h2 class="text-primary">320</h2>
+                    <h2 class="text-primary">@ViewBag.DashboardData.TotalOrders</h2>
                     <p class="card-text">Review and manage customer orders.</p>
                     <a asp-area="Admin" asp-controller="Orders" asp-action="Index" class="btn btn-primary btn-sm">View Orders</a>
                 </div>
@@ -68,15 +62,19 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
+        // Parse the data passed from the controller
+        const salesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DashboardData.SalesData));
+        const genreData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.DashboardData.GenreData));
+
         // Sales Chart
         const salesCtx = document.getElementById('salesChart').getContext('2d');
         const salesChart = new Chart(salesCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: salesData.map(data => Month ${ data.Month }),
                 datasets: [{
                     label: 'Sales ($)',
-                    data: [1200, 1900, 3000, 5000, 2400, 3200],
+                    data: salesData.map(data => data.Total),
                     borderColor: 'rgba(75, 192, 192, 1)',
                     backgroundColor: 'rgba(75, 192, 192, 0.2)',
                     tension: 0.4
@@ -97,10 +95,10 @@
         const genreChart = new Chart(genreCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Fiction', 'Non-Fiction', 'Sci-Fi', 'Romance', 'Others'],
+                labels: genreData.map(data => data.Genre),
                 datasets: [{
                     label: 'Genres',
-                    data: [300, 200, 150, 100, 50],
+                    data: genreData.map(data => data.Count),
                     backgroundColor: [
                         'rgba(255, 99, 132, 0.2)',
                         'rgba(54, 162, 235, 0.2)',

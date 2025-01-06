@@ -28,10 +28,25 @@
                 </td>
                 <td>@Html.DisplayFor(modelItem => item.Customer.FirstName)</td>
                 <td class="text-center">
-                    <a asp-action="Edit" asp-route-id="@item.OrderId" class="btn btn-warning btn-sm">Edit</a>
                     <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-info btn-sm">Details</a>
+                    @if (item.Status == "Pending")
+                    {
+                        <form asp-action="CancelOrder" asp-route-id="@item.OrderId" method="post" class="d-inline">
+                            <button type="submit" class="btn btn-danger btn-sm">Cancel</button>
+                        </form>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+

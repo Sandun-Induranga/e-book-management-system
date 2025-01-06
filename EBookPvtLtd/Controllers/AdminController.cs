@@ -1,15 +1,13 @@
 ﻿using EBookPvtLtd.Data;
 using EBookPvtLtd.Models;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using OfficeOpenXml;
+using System.Linq;
 
 namespace EBookPvtLtd.Controllers
 {
     public class AdminController : Controller
     {
-
         private readonly EBookPvtLtdContext _context;
         private List<Order> orders = [];
 
@@ -18,10 +16,40 @@ namespace EBookPvtLtd.Controllers
             _context = context;
         }
 
-
-        // GET: AdminController
-        public ActionResult Index()
+        // GET: Admin Dashboard
+        public IActionResult Index()
         {
+            var totalBooks = _context.Book.Count();
+            var totalUsers = _context.Users.Count();
+            var totalOrders = _context.Order.Count();
+
+            // Aggregate sales data by month
+            var salesData = _context.Order
+                .Where(o => o.Status == "Completed")
+                .GroupBy(o => o.OrderDate.Month)
+                .Select(g => new { Month = g.Key, Total = g.Sum(o => o.TotalAmount) })
+                .OrderBy(o => o.Month)
+                .ToList();
+
+            // Aggregate genre data
+            var genreData = _context.Book
+                .GroupBy(b => b.Genre)
+                .Select(g => new { Genre = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .ToList();
+
+            // Pass data to the view
+            var dashboardData = new
+            {
+                TotalBooks = totalBooks,
+                TotalUsers = totalUsers,
+                TotalOrders = totalOrders,
+                SalesData = salesData,
+                GenreData = genreData
+            };
+
+            ViewBag.DashboardData = dashboardData;
+
             return View();
         }
 
@@ -31,31 +59,31 @@ namespace EBookPvtLtd.Controllers
             return View();
         }
 
-    // Generate report based on admin input
-    [HttpPost]
-    public IActionResult GenerateReport(string reportType, DateTime startDate, DateTime endDate)
-    {
-        var reportData = new List<Order>();
-
-        switch (reportType)
+        // Generate report based on admin input
+        [HttpPost]
+        public IActionResult GenerateReport(string reportType, DateTime startDate, DateTime endDate)
         {
-            case "Sales":
-                reportData = _context.Order
-                    .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
-                    .Select(o => o)
-                    .ToList();
-                break;
-            default:
-                ViewBag.ErrorMessage = "Invalid report type selected.";
-                return View("Reports");
+            var reportData = new List<Order>();
+
+            switch (reportType)
+            {
+                case "Sales":
+                    reportData = _context.Order
+                        .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
+                        .Select(o => o)
+                        .ToList();
+                    break;
+                default:
+                    ViewBag.ErrorMessage = "Invalid report type selected.";
+                    return View("Reports");
+            }
+
+            orders = reportData;
+            TempData["ReportData"] = System.Text.Json.JsonSerializer.Serialize(reportData);
+            TempData["ReportType"] = reportType;
+
+            return View("ReportResults", reportData);
         }
-
-        orders = reportData;
-        TempData["ReportData"] = System.Text.Json.JsonSerializer.Serialize(reportData);
-        TempData["ReportType"] = reportType;
-
-        return View("ReportResults", reportData);
-    }
 
         [HttpPost]
         public IActionResult ExportReport()

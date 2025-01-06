@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using EBookPvtLtd.Data;
 using EBookPvtLtd.Models;
+using EBookPvtLtd.Areas.Identity.Pages.Account;
 
 namespace EBookPvtLtd.Controllers
 {
@@ -69,7 +70,7 @@ namespace EBookPvtLtd.Controllers
         public IActionResult Create()
         {
             ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId");
-            return View();
+            return RedirectToAction("CustomerIndex", "Orders");
         }
 
         // POST: Orders/Create
@@ -83,10 +84,9 @@ namespace EBookPvtLtd.Controllers
             {
                 _context.Add(order);
                 await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
             }
             ViewData["CustomerId"] = new SelectList(_context.Customer, "CustomerId", "CustomerId", order.CustomerId);
-            return View(order);
+            return RedirectToAction("CustomerIndex", "Orders");
         }
 
         // GET: Orders/Edit/5
@@ -146,17 +146,24 @@ namespace EBookPvtLtd.Controllers
         public async Task<IActionResult> Checkout([FromBody] List<CartItem> cartItems)
         {
             _logger.LogInformation("Checkout initiated.");
-
-            // Assuming customer is logged in and we have their ID
-            int customerId = TempData["CustomerId"] as int? ?? 0;
-            _logger.LogInformation("Customer ID: {0}", customerId);
+            decimal totalAmount = 0;
+            
+            foreach (var item in cartItems)
+            {
+                var book = await _context.Book.FindAsync(item.BookId);
+                if (book != null)
+                {
+                    totalAmount += book.Price * item.Quantity;
+                }
+            }
 
             // Create a new order
             var order = new Order
             {
-                CustomerId = customerId,
+                CustomerId = LoginModel.customerId,
                 OrderDate = DateTime.Now,
                 Status = "Pending",
+                TotalAmount = totalAmount,
             };
 
             _logger.LogInformation("Order created.");
@@ -228,6 +235,37 @@ namespace EBookPvtLtd.Controllers
         private bool OrderExists(int id)
         {
             return _context.Order.Any(e => e.OrderId == id);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelOrder(int id)
+        {
+            var order = await _context.Order.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            if (order.Status != "Pending")
+            {
+                return BadRequest("Only pending orders can be cancelled.");
+            }
+
+            order.Status = "Cancelled";
+            try
+            {
+                _context.Update(order);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Order cancelled successfully.";
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error cancelling order with ID {0}.", id);
+                TempData["ErrorMessage"] = "An error occurred while cancelling the order.";
+            }
+
+            return RedirectToAction(nameof(CustomerIndex));
         }
     }
 }

@@ -22,7 +22,7 @@
                         <p class="card-text text-muted"><strong>Available:</strong> @book.Quantity</p>
                         <p class="card-text"><small class="text-muted text-truncate">@book.Description</small></p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <a asp-action="Details" asp-route-id="@book.BookId" class="btn btn-info btn-sm">Details</a>
+                            <button class="btn btn-info btn-sm w-100 view-feedback" data-id="@book.BookId" data-bs-toggle="modal" data-bs-target="#feedbackModal">View Feedback</button>
                             <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
                         </div>
                     </div>
@@ -33,6 +33,41 @@
 
     <div class="text-center mt-4">
         <a asp-action="Cart" class="btn btn-secondary">Go to Cart</a>
+    </div>
+</div>
+
+<!-- Feedback Modal -->
+<div class="modal fade" id="feedbackModal" tabindex="-1" aria-labelledby="feedbackModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feedbackModalLabel">Feedback</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Feedback Section -->
+                <div id="feedbackSection" class="mb-3">
+                    <h6>Customer Feedback</h6>
+                    <ul class="list-group feedback-list">
+                        <!-- Feedback items will be dynamically inserted here -->
+                    </ul>
+                </div>
+
+                <!-- Add Feedback Form -->
+                <form id="feedbackForm">
+                    <input type="hidden" id="feedbackBookId" />
+                    <div class="mb-3">
+                        <label for="customerName" class="form-label">Your Name</label>
+                        <input type="text" class="form-control" id="customerName" placeholder="Enter your name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="feedbackContent" class="form-label">Your Feedback</label>
+                        <textarea class="form-control" id="feedbackContent" rows="3" placeholder="Share your thoughts about this book" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Feedback</button>
+                </form>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -58,8 +93,98 @@
 
                     // Save cart back to localStorage
                     localStorage.setItem('cart', JSON.stringify(cart));
-                    alert('Item added to cart!');
                 });
+            });
+
+            // View Feedback functionality
+            document.querySelectorAll('.view-feedback').forEach(button => {
+                button.addEventListener('click', async function () {
+                    const bookId = parseInt(this.getAttribute('data-id'));
+                    document.getElementById('feedbackBookId').value = bookId;
+
+                    try {
+                        // Fetch feedback for the selected book
+                        const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
+                        if (!response.ok) {
+                            throw new Error("Failed to fetch feedback.");
+                        }
+
+                        const feedbacks = await response.json();
+
+                        // Update feedback list
+                        const feedbackList = document.querySelector('.feedback-list');
+                        feedbackList.innerHTML = ''; // Clear existing feedback
+
+                        if (feedbacks.length === 0) {
+                            feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
+                        } else {
+                            feedbacks.forEach(feedback => {
+                                const listItem = document.createElement('li');
+                                listItem.classList.add('list-group-item');
+                                listItem.innerHTML = `
+                                <strong>${feedback.CustomerName}:</strong> ${feedback.Content} <small class="text-muted">(${new Date(feedback.CreatedAt).toLocaleDateString()})</small>`;
+                                feedbackList.appendChild(listItem);
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Error fetching feedback:", err);
+                        alert("An error occurred while loading feedback.");
+                    }
+                });
+            });
+
+            document.addEventListener('click', async function (e) {
+                if (e.target && e.target.classList.contains('view-feedback')) {
+                    console.log("View Feedback clicked!"); // Debugging log
+
+                    const bookId = parseInt(e.target.getAttribute('data-id'));
+                    document.getElementById('feedbackBookId').value = bookId;
+
+                    try {
+                        const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
+                        const feedbacks = await response.json();
+
+                        const feedbackList = document.querySelector('.feedback-list');
+                        feedbackList.innerHTML = ''; // Clear existing feedback
+
+                        if (feedbacks.length === 0) {
+                            feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
+                        } else {
+                            feedbacks.forEach(feedback => {
+                                const listItem = document.createElement('li');
+                                listItem.classList.add('list-group-item');
+                                listItem.innerHTML = `<strong>${feedback.CustomerName}:</strong> ${feedback.Content}
+                                <small class="text-muted">(${new Date(feedback.CreatedAt).toLocaleDateString()})</small>`;
+                                feedbackList.appendChild(listItem);
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Error fetching feedback:", err);
+                        alert("An error occurred while loading feedback.");
+                    }
+                }
+            });
+
+            // Submit Feedback functionality
+            document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const bookId = document.getElementById('feedbackBookId').value;
+                const customerName = document.getElementById('customerName').value;
+                const feedbackContent = document.getElementById('feedbackContent').value;
+
+                const response = await fetch('/Feedbacks/AddFeedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ BookId: bookId, CustomerName: customerName, Content: feedbackContent })
+                });
+
+                if (response.ok) {
+                    alert('Feedback submitted!');
+                    document.getElementById('feedbackForm').reset();
+                } else {
+                    alert('Failed to submit feedback.');
+                }
             });
         });
     </script>
