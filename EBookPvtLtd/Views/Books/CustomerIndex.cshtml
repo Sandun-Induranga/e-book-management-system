@@ -6,7 +6,7 @@
 }
 
 <div class="container py-5">
-    <h1 class="text-center mb-4">Browser Our Book Collection</h1>
+    <h1 class="text-center mb-4">Browse Our Book Collection</h1>
 
     <div class="row">
         @foreach (var book in Model)
@@ -21,10 +21,8 @@
                         <p class="card-text text-success"><strong>Price:</strong> $@book.Price</p>
                         <p class="card-text text-muted"><strong>Available:</strong> @book.Quantity</p>
                         <p class="card-text"><small class="text-muted text-truncate">@book.Description</small></p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <button class="btn btn-info btn-sm w-100 view-feedback" data-id="@book.BookId">View Feedback</button>
-                            <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
-                        </div>
+                            <button class="btn btn-info btn-sm w-100 view-feedback" data-id="@book.BookId" data-bs-toggle="modal" data-bs-target="#feedbackModal">View Feedback</button>
+                            <button class="btn btn-success btn-sm w-100 add-to-cart mt-2" data-id="@book.BookId">Add to Cart</button>
                     </div>
                 </div>
             </div>
@@ -48,7 +46,7 @@
                 <!-- Feedback Section -->
                 <div id="feedbackSection" class="mb-3">
                     <h6>Customer Feedback</h6>
-                    <ul class="list-group feedback-list-view">
+                    <ul class="list-group feedback-list">
                         <!-- Feedback items will be dynamically inserted here -->
                     </ul>
                 </div>
@@ -73,16 +71,14 @@
 
 @section Scripts {
     <script>
-
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize cart from localStorage or create an empty one
             const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-            // Attach click event to Add to Cart buttons
+            // Add to Cart functionality
             document.querySelectorAll('.add-to-cart').forEach(button => {
                 button.addEventListener('click', function () {
                     const bookId = parseInt(this.getAttribute('data-id'));
-                    const cart = JSON.parse(localStorage.getItem('cart')) || [];
 
                     // Check if the book is already in the cart
                     const existingItem = cart.find(item => item.BookId === bookId);
@@ -97,64 +93,72 @@
                     alert('Item added to cart!');
                 });
             });
-        });
 
-        // Submit Feedback functionality
-        document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
-            e.preventDefault();
+                // View Feedback functionality
+                document.querySelectorAll('.view-feedback').forEach(button => {
+                    button.addEventListener('click', function () {
+                        const bookId = this.getAttribute('data-id');
+                        console.log('Fetching feedback for bookId:', bookId);
 
-            const bookId = document.getElementById('feedbackBookId').value;
-            const customerName = document.getElementById('customerName').value;
-            const feedbackContent = document.getElementById('feedbackContent').value;
+                        const feedbackList = document.querySelector('.feedback-list');
+                        feedbackList.innerHTML = '<li class="list-group-item">Loading feedback...</li>'; // Placeholder
+                        document.getElementById('feedbackBookId').value = bookId; // Set the bookId in the feedback form
 
-            const response = await fetch('/Feedbacks/AddFeedback', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ BookId: bookId, CustomerName: customerName, Content: feedbackContent })
-            });
+                        // Fetch feedback for the selected book
+                        fetch(`/Feedbacks/GetFeedback?bookId=${bookId}`)
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to fetch feedback.');
+                                }
+                                return response.json();
+                            })
+                            .then(feedbacks => {
+                                feedbackList.innerHTML = ''; // Clear placeholder
 
-            if (response.ok) {
-                alert('Feedback submitted!');
-                document.getElementById('feedbackForm').reset();
-            } else {
-                alert('Failed to submit feedback.');
-            }
-        });
+                                if (feedbacks.length === 0) {
+                                    feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
+                                } else {
+                                    feedbacks.forEach(feedback => {
+                                        const listItem = document.createElement('li');
+                                        listItem.classList.add('list-group-item');
+                                        listItem.innerHTML = `
+                                        <strong>${feedback.customerName}:</strong> ${feedback.content}
+                                        <small class="text-muted">(${new Date(feedback.createdAt).toLocaleDateString()})</small>`;
+                                        feedbackList.appendChild(listItem);
+                                    });
+                                }
+                            })
+                            .catch(err => {
+                                console.error('Error fetching feedback:', err);
+                                feedbackList.innerHTML = '<li class="list-group-item text-danger">Error loading feedback. Please try again later.</li>';
+                            });
+                    });
+                });
 
-        // View Feedback functionality
-        document.querySelectorAll('.view-feedback').forEach(button => {
-            button.addEventListener('click', async function () {
-                const bookId = parseInt(this.getAttribute('data-id'));
-                document.getElementById('feedbackBookId').value = bookId;
+            // Submit Feedback functionality
+            document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const bookId = document.getElementById('feedbackBookId').value;
+                const customerName = document.getElementById('customerName').value;
+                const feedbackContent = document.getElementById('feedbackContent').value;
 
                 try {
-                    // Fetch feedback for the selected book
-                    const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
-                    if (!response.ok) {
-                        throw new Error("Failed to fetch feedback.");
-                    }
+                    const response = await fetch('/Feedbacks/AddFeedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ BookId: bookId, CustomerName: customerName, Content: feedbackContent })
+                    });
 
-                    const feedbacks = await response.json();
-
-                    // Update feedback list
-                    const feedbackList = document.querySelector('.feedback-list');
-                    feedbackList.innerHTML = ''; // Clear existing feedback
-
-                    if (feedbacks.length === 0) {
-                        feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
+                    if (response.ok) {
+                        alert('Feedback submitted!');
+                        document.getElementById('feedbackForm').reset();
                     } else {
-                        feedbacks.forEach(feedback => {
-                            const listItem = document.createElement('li');
-                            listItem.classList.add('list-group-item');
-                            listItem.innerHTML = `
-                                            <strong>${feedback.customerName}:</strong> ${feedback.content}
-                                            <small class="text-muted">(${new Date(feedback.createdAt).toLocaleDateString()})</small>`;
-                            feedbackList.appendChild(listItem);
-                        });
+                        alert('Failed to submit feedback.');
                     }
                 } catch (err) {
-                    console.error("Error fetching feedback:", err);
-                    alert("An error occurred while loading feedback.");
+                    console.error("Error submitting feedback:", err);
+                    alert("An error occurred while submitting feedback.");
                 }
             });
         });
