@@ -23,7 +23,7 @@
             <tr>
                 <td>@Html.DisplayFor(modelItem => item.OrderDate)</td>
                 <td>
-                    <span class="badge @((item.Status == "Completed") ? "bg-success" : (item.Status == "Pending") ? "bg-warning" : "bg-secondary")">
+                    <span class="badge @((item.Status == "Completed") ? "bg-success" : (item.Status == "Pending") ? "bg-warning" :  (item.Status == "Processing") ?  "bg-primary" : "bg-secondary")">
                         @Html.DisplayFor(modelItem => item.Status)
                     </span>
                 </td>
@@ -44,6 +44,7 @@
                                 <form class="dropdown-item" id="changeStatusForm-@item.OrderId">
                                     <select class="form-select form-select-sm status-dropdown" data-order-id="@item.OrderId">
                                         <option value="Pending" selected="@(item.Status == "Pending" ? true : false)">Pending</option>
+                                        <option value="Processing" selected="@(item.Status == "Processing" ? true : false)">Processing</option>
                                         <option value="Completed" selected="@(item.Status == "Completed" ? true : false)">Completed</option>
                                         <option value="Cancelled" selected = "@(item.Status =="Cancelled" ? true : false )">Cancelled</option>
                                     </select>
@@ -91,7 +92,7 @@
                                 <h4 class="card-title text-primary">Order Information</h4>
                                 <p><strong>Order ID:</strong> ${data.orderId}</p>
                                 <p><strong>Order Date:</strong> ${new Date(data.orderDate).toLocaleDateString()}</p>
-                                <p><strong>Status:</strong> <span class="badge ${data.status === 'Completed' ? 'bg-success' : 'bg-warning'}">${data.status}</span></p>
+                                                <p><strong>Status:</strong> <span class="badge ${data.status === 'Completed' ? 'bg-success' : (data.status == "Processing") ? "bg-primary" : (data.status == "Pending") ? "bg-warning" : 'bg-secondary'}">${data.status}</span></p>
                                 <p><strong>Total Amount:</strong> <span class="text-success">$${data.totalAmount}</span></p>
                             </div>
                         </div>

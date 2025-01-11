@@ -2,8 +2,6 @@
 using EBookPvtLtd.Models;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace EBookPvtLtd.Controllers
 {
@@ -148,7 +146,7 @@ namespace EBookPvtLtd.Controllers
 
                     // Highlight completed orders in green, pending in red
                     worksheet.Cells[rowIndex, 4].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
-                    worksheet.Cells[rowIndex, 4].Style.Fill.BackgroundColor.SetColor(order.Status == "Completed" ? System.Drawing.Color.LightGreen : System.Drawing.Color.LightSalmon);
+                    worksheet.Cells[rowIndex, 4].Style.Fill.BackgroundColor.SetColor(order.Status == "Completed" ? System.Drawing.Color.LightGreen : order.Status == "Processing" ? System.Drawing.Color.Blue :  System.Drawing.Color.LightSalmon);
 
                     totalIncome += order.TotalAmount;
                     rowIndex++;

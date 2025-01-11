@@ -273,14 +273,22 @@ namespace EBookPvtLtd.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var order = await _context.Order.FindAsync(id);
-            if (order != null)
+            try
             {
-                _context.Order.Remove(order);
-            }
+                var order = await _context.Order.FindAsync(id);
+                if (order != null)
+                {
+                    _context.Order.Remove(order);
+                }
 
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            } catch (Exception ex) {
+                _logger.LogError(ex, "Error deleting order with ID {0}.", id);
+                TempData["ErrorMessage"] = "An error occurred while deleting the order.";
+                return RedirectToAction(nameof(Index));
+            }
+            
         }
 
         private bool OrderExists(int id)
@@ -322,16 +330,24 @@ namespace EBookPvtLtd.Controllers
         [HttpPost]
         public IActionResult ChangeStatus(int id, string status)
         {
-            var order = _context.Order.FirstOrDefault(o => o.OrderId == id);
-            if (order == null)
+            try
             {
-                return NotFound();
+                var order = _context.Order.FirstOrDefault(o => o.OrderId == id);
+                if (order == null)
+                {
+                    return NotFound();
+                }
+
+                order.Status = status;
+                _context.SaveChanges();
+
+                return Json(new { success = true });
             }
-
-            order.Status = status;
-            _context.SaveChanges();
-
-            return Json(new { success = true });
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing status of order with ID {0}.", id);
+                return Json(new { success = false });
+            }
         }
     }
 }
