@@ -71,7 +71,7 @@
         const salesChart = new Chart(salesCtx, {
             type: 'line',
             data: {
-                labels: salesData.map(data => Month ${ data.Month }),
+                labels: salesData.map(data => data.OrderDate),
                 datasets: [{
                     label: 'Sales ($)',
                     data: salesData.map(data => data.Total),

@@ -2,13 +2,10 @@
 
 @{
     ViewData["Title"] = "Feedback";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <h1>Feedback for Book</h1>
-
-<div>
-    <a asp-action="Create" asp-route-bookId="@ViewBag.BookId" class="btn btn-primary mb-3">Add Feedback</a>
-</div>
 
 @if (!Model.Any())
 {

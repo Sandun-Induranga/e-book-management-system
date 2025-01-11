@@ -97,39 +97,55 @@
                 // Fetch order details
                 $.getJSON('/Orders/Details/' + orderId, function (data) {
                     var content = `
-                                        <h4>Order Information</h4>
-                                        <p><strong>Order ID:</strong> ${data.orderId}</p>
-                                        <p><strong>Order Date:</strong> ${data.orderDate}</p>
-                                        <p><strong>Status:</strong> ${data.status}</p>
-                                        <p><strong>Total Amount:</strong> ${data.totalAmount}</p>
-                                        <h4>Customer Information</h4>
-                                        <p><strong>Name:</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
-                                        <p><strong>Email:</strong> ${data.customer.email}</p>
-                                        <h4>Order Items</h4>
-                                        <table class="table table-bordered">
-                                            <thead>
-                                                <tr>
-                                                    <th>Title</th>
-                                                    <th>Price</th>
-                                                    <th>Quantity</th>
-                                                    <th>Total Price</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>`;
+            <div class="container p-4">
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary">Order Information</h4>
+                        <p><strong>Order ID:</strong> ${data.orderId}</p>
+                        <p><strong>Order Date:</strong> ${new Date(data.orderDate).toLocaleDateString()}</p>
+                        <p><strong>Status:</strong> <span class="badge ${data.status === 'Completed' ? 'bg-success' : 'bg-warning'}">${data.status}</span></p>
+                        <p><strong>Total Amount:</strong> <span class="text-success">$${data.totalAmount}</span></p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0 mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary">Customer Information</h4>
+                        <p><strong>Name:</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
+                        <p><strong>Email:</strong> <a href="mailto:${data.customer.email}" class="text-decoration-none">${data.customer.email}</a></p>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm border-0">
+                    <div class="card-body">
+                        <h4 class="card-title text-primary">Order Items</h4>
+                        <table class="table table-hover table-bordered mt-3">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
 
                     data.items.forEach(item => {
                         content += `
-                                            <tr>
-                                                <td>${item.title}</td>
-                                                <td>${item.price}</td>
-                                                <td>${item.quantity}</td>
-                                                <td>${item.totalPrice}</td>
-                                            </tr>`;
+                                <tr>
+                                    <td>${item.title}</td>
+                                    <td>$${item.price.toFixed(2)}</td>
+                                    <td>${item.quantity}</td>
+                                    <td>$${item.totalPrice}</td>
+                                </tr>`;
                     });
 
                     content += `
-                                            </tbody>
-                                        </table>`;
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>`;
 
                     modalContent.html(content); // Populate modal with data
                 }).fail(function () {

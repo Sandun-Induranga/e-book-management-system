@@ -3,13 +3,13 @@ using EBookPvtLtd.Models;
 using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace EBookPvtLtd.Controllers
 {
     public class AdminController : Controller
     {
         private readonly EBookPvtLtdContext _context;
-        private List<Order> orders = [];
 
         public AdminController(EBookPvtLtdContext context)
         {
@@ -23,19 +23,25 @@ namespace EBookPvtLtd.Controllers
             var totalUsers = _context.Users.Count();
             var totalOrders = _context.Order.Count();
 
-            // Aggregate sales data by month
+            // Aggregate sales data by year and month
             var salesData = _context.Order
                 .Where(o => o.Status == "Completed")
-                .GroupBy(o => o.OrderDate.Month)
-                .Select(g => new { Month = g.Key, Total = g.Sum(o => o.TotalAmount) })
+                .GroupBy(o => new { o.OrderDate.Year, o.OrderDate.Month })
+                .Select(g => new
+                {
+                    OrderDate = g.Key.Month,
+                    Month = g.Key.Month,
+                    Total = g.Sum(o => o.TotalAmount)
+                })
                 .OrderBy(o => o.Month)
                 .ToList();
 
-            // Aggregate genre data
+            // Aggregate genre data, limiting to top 5 genres
             var genreData = _context.Book
                 .GroupBy(b => b.Genre)
                 .Select(g => new { Genre = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)
+                .Take(5)
                 .ToList();
 
             // Pass data to the view
@@ -70,70 +76,100 @@ namespace EBookPvtLtd.Controllers
                 case "Sales":
                     reportData = _context.Order
                         .Where(o => o.OrderDate >= startDate && o.OrderDate <= endDate)
-                        .Select(o => o)
                         .ToList();
                     break;
                 default:
-                    ViewBag.ErrorMessage = "Invalid report type selected.";
+                    ModelState.AddModelError("", "Invalid report type selected.");
                     return View("Reports");
             }
 
-            orders = reportData;
             TempData["ReportData"] = System.Text.Json.JsonSerializer.Serialize(reportData);
-            TempData["ReportType"] = reportType;
 
             return View("ReportResults", reportData);
         }
 
-        [HttpPost]
-        public IActionResult ExportReport()
-        {
-            var reportData = TempData["ReportData"] as List<object>;
-            var reportType = TempData["ReportType"]?.ToString();
-
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Report");
-                worksheet.Cells.LoadFromCollection(reportData, true);
-                var stream = new MemoryStream(package.GetAsByteArray());
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{reportType}_Report.xlsx");
-            }
-        }
-
+        // Export report to Excel
         [HttpPost]
         public IActionResult ExportToExcel()
         {
-            // Enable non-commercial use of EPPlus
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            var reportDataJson = TempData["ReportData"]?.ToString();
+
+            if (string.IsNullOrEmpty(reportDataJson))
+            {
+                ViewBag.ErrorMessage = "No report data available for export.";
+                return View("Reports");
+            }
+
+            List<Order> reportData;
+            try
+            {
+                reportData = System.Text.Json.JsonSerializer.Deserialize<List<Order>>(reportDataJson);
+            }
+            catch
+            {
+                ViewBag.ErrorMessage = "Failed to deserialize report data.";
+                return View("Reports");
+            }
 
             using (var package = new ExcelPackage())
             {
+                // Create a worksheet
                 var worksheet = package.Workbook.Worksheets.Add("Report");
 
                 // Add headers
-                worksheet.Cells[1, 1].Value = "Order ID";
-                worksheet.Cells[1, 2].Value = "Customer ID";
-                worksheet.Cells[1, 3].Value = "Total Amount";
-                worksheet.Cells[1, 4].Value = "Order Date";
+                worksheet.Cells["A1"].Value = "Order ID";
+                worksheet.Cells["B1"].Value = "Customer ID";
+                worksheet.Cells["C1"].Value = "Order Date";
+                worksheet.Cells["D1"].Value = "Status";
+                worksheet.Cells["E1"].Value = "Total Amount";
 
-                // Add data (replace with your actual data)
-                var orders = _context.Order.ToList(); // Example: Fetch orders from database
-                for (int i = 0; i < orders.Count; i++)
+                // Style headers
+                using (var headerRange = worksheet.Cells["A1:E1"])
                 {
-                    worksheet.Cells[i + 2, 1].Value = orders[i].OrderId;
-                    worksheet.Cells[i + 2, 2].Value = orders[i].CustomerId;
-                    worksheet.Cells[i + 2, 3].Value = orders[i].Status;
-                    worksheet.Cells[i + 2, 4].Value = orders[i].OrderDate.ToString("yyyy-MM-dd");
+                    headerRange.Style.Font.Bold = true;
+                    headerRange.Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    headerRange.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                    headerRange.Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Center;
                 }
 
-                // Auto-fit columns
-                worksheet.Cells.AutoFitColumns();
+                // Populate data
+                int rowIndex = 2;
+                decimal totalIncome = 0;
 
-                // Generate Excel file in memory
+                foreach (var order in reportData)
+                {
+
+                    worksheet.Cells[rowIndex, 1].Value = order.OrderId;
+                    worksheet.Cells[rowIndex, 2].Value = order.CustomerId;
+                    worksheet.Cells[rowIndex, 3].Value = order.OrderDate.ToString("yyyy-MM-dd");
+                    worksheet.Cells[rowIndex, 4].Value = order.Status;
+                    worksheet.Cells[rowIndex, 5].Value = order.TotalAmount;
+                    worksheet.Cells[rowIndex, 5].Style.Numberformat.Format = "#,##0.00"; // Format as currency
+
+                    // Highlight completed orders in green, pending in red
+                    worksheet.Cells[rowIndex, 4].Style.Fill.PatternType = OfficeOpenXml.Style.ExcelFillStyle.Solid;
+                    worksheet.Cells[rowIndex, 4].Style.Fill.BackgroundColor.SetColor(order.Status == "Completed" ? System.Drawing.Color.LightGreen : System.Drawing.Color.LightSalmon);
+
+                    totalIncome += order.TotalAmount;
+                    rowIndex++;
+                }
+
+                // Add total income row
+                worksheet.Cells[rowIndex, 4].Value = "Total Income:";
+                worksheet.Cells[rowIndex, 4].Style.Font.Bold = true;
+                worksheet.Cells[rowIndex, 5].Value = totalIncome;
+                worksheet.Cells[rowIndex, 5].Style.Numberformat.Format = "#,##0.00";
+                worksheet.Cells[rowIndex, 5].Style.Font.Bold = true;
+
+                // Adjust column widths
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                // Create a memory stream and write the Excel package to it
                 var stream = new MemoryStream(package.GetAsByteArray());
 
-                // Return file as downloadable response
-                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "Report.xlsx");
+                // Add a timestamp to the file name for better organization
+                var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"Report{timestamp}.xlsx");
             }
         }
     }

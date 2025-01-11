@@ -166,56 +166,87 @@ namespace EBookPvtLtd.Controllers
         public async Task<IActionResult> Checkout([FromBody] List<CartItem> cartItems)
         {
             _logger.LogInformation("Checkout initiated.");
+
+            // Calculate total amount
             decimal totalAmount = 0;
-            
-            foreach (var item in cartItems)
+
+            // Start a transaction
+            using (var transaction = await _context.Database.BeginTransactionAsync())
             {
-                var book = await _context.Book.FindAsync(item.BookId);
-                if (book != null)
+                try
                 {
-                    totalAmount += book.Price * item.Quantity;
-                }
-            }
-
-            // Create a new order
-            var order = new Order
-            {
-                CustomerId = LoginModel.customerId,
-                OrderDate = DateTime.Now,
-                Status = "Pending",
-                TotalAmount = totalAmount,
-            };
-
-            _logger.LogInformation("Order created.");
-
-            _context.Order.Add(order);
-            await _context.SaveChangesAsync();
-
-            // Add order items
-            foreach (var item in cartItems)
-            {
-                var book = await _context.Book.FindAsync(item.BookId);
-                if (book != null)
-                {
-                    var orderItem = new OrderItem
+                    // Validate and calculate total amount
+                    foreach (var item in cartItems)
                     {
-                        OrderId = order.OrderId,
-                        BookId = item.BookId,
-                        Quantity = item.Quantity,
-                        Price = book.Price * item.Quantity,
+                        var book = await _context.Book.FindAsync(item.BookId);
+                        if (book != null)
+                        {
+                            if (book.Quantity < item.Quantity)
+                            {
+                                return Json(new { Success = false, Message = $"Insufficient stock for book ID: {item.BookId}" });
+                            }
+                            totalAmount += book.Price * item.Quantity;
+                        }
+                        else
+                        {
+                            return Json(new { Success = false, Message = $"Book ID: {item.BookId} not found" });
+                        }
+                    }
+
+                    // Create a new order
+                    var order = new Order
+                    {
+                        CustomerId = LoginModel.customerId,
+                        OrderDate = DateTime.Now,
+                        Status = "Pending",
+                        TotalAmount = totalAmount,
                     };
 
-                    _context.OrderItem.Add(orderItem);
+                    _logger.LogInformation("Order created.");
+
+                    _context.Order.Add(order);
+                    await _context.SaveChangesAsync();
+
+                    // Add order items and update stock
+                    foreach (var item in cartItems)
+                    {
+                        var book = await _context.Book.FindAsync(item.BookId);
+                        if (book != null)
+                        {
+                            // Add order item
+                            var orderItem = new OrderItem
+                            {
+                                OrderId = order.OrderId,
+                                BookId = item.BookId,
+                                Quantity = item.Quantity,
+                                Price = book.Price * item.Quantity,
+                            };
+                            _context.OrderItem.Add(orderItem);
+
+                            // Update book stock
+                            book.Quantity -= item.Quantity;
+                            _context.Book.Update(book);
+                        }
+                    }
+
+                    _logger.LogInformation("Order items added and stock updated.");
+
+                    // Commit the transaction
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    _logger.LogInformation("Checkout completed successfully.");
+
+                    return Json(new { Success = true, order.OrderId });
+                }
+                catch (Exception ex)
+                {
+                    // Rollback transaction on error
+                    await transaction.RollbackAsync();
+                    _logger.LogError($"Error during checkout: {ex.Message}");
+                    return Json(new { Success = false, Message = "An error occurred during checkout. Please try again." });
                 }
             }
-
-            _logger.LogInformation("Order items added.");
-
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("Checkout completed.");
-
-            return Json(new { Success = true, order.OrderId });
         }
 
         // GET: Orders/Delete/5

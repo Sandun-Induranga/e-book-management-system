@@ -121,9 +121,11 @@
                                     feedbacks.forEach(feedback => {
                                         const listItem = document.createElement('li');
                                         listItem.classList.add('list-group-item');
-                                        listItem.innerHTML = `
-                                        <strong>${feedback.customerName}:</strong> ${feedback.content}
-                                        <small class="text-muted">(${new Date(feedback.createdAt).toLocaleDateString()})</small>`;
+                                    listItem.innerHTML = `<div class="ms-2 me-auto" >
+                                        <div class="fw-bold" > ${ feedback.customerName } </div>
+                                            <p class="mb-1" > ${ feedback.content } </p>
+                                                </div>
+                                                <small class="text-muted text-end" > ${ new Date(feedback.createdAt).toLocaleDateString() } </small>`;
                                         feedbackList.appendChild(listItem);
                                     });
                                 }
@@ -153,6 +155,7 @@
                     if (response.ok) {
                         alert('Feedback submitted!');
                         document.getElementById('feedbackForm').reset();
+                        window.location.reload(); // Refresh the page to show updated feedback
                     } else {
                         alert('Failed to submit feedback.');
                     }
