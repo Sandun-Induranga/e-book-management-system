@@ -26,6 +26,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
         private readonly UserManager<Users> _userManager;
         private readonly EBookPvtLtdContext _context;
         public static int customerId = 0;
+        public static string role = "Admin";
 
         public LoginModel(SignInManager<Users> signInManager, ILogger<LoginModel> logger, UserManager<Users> userManager, EBookPvtLtdContext context)
         {
@@ -177,6 +178,7 @@ namespace EBookPvtLtd.Areas.Identity.Pages.Account
                                 TempData["CustomerId"] = customer.CustomerId;
                                 Console.WriteLine(customer.CustomerId);
                                 TempData["Role"] = "Customer";
+                                role = "Customer";
                             }
 
                             return RedirectToAction("CustomerIndex", "Books"); // Redirect to Customer Dashboard

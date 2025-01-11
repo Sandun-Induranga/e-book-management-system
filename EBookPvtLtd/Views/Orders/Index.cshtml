@@ -30,11 +30,120 @@
                 <td>@Html.DisplayFor(modelItem => item.Customer.FirstName)</td>
                 <td>@Html.DisplayFor(modelItem => item.Customer.LastName)</td>
                 <td class="text-center">
-                    <a asp-action="Edit" asp-route-id="@item.OrderId" class="btn btn-warning btn-sm">Edit</a>
-                    <a asp-action="Details" asp-route-id="@item.OrderId" class="btn btn-info btn-sm">Details</a>
-                    <a asp-action="Delete" asp-route-id="@item.OrderId" class="btn btn-danger btn-sm">Delete</a>
+                    <div class="dropdown">
+                        <button class="btn btn-secondary btn-sm dropdown-toggle" type="button" id="actionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            Actions
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="actionsDropdown">
+                            <li>
+                                <button class="dropdown-item btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#detailsModal" data-order-id="@item.OrderId">
+                                    View Details
+                                </button>
+                            </li>
+                            <li>
+                                <form class="dropdown-item" id="changeStatusForm-@item.OrderId">
+                                    <select class="form-select form-select-sm status-dropdown" data-order-id="@item.OrderId">
+    <option value="Pending" selected="@(item.Status == "Pending" ? true : false)">Pending</option>
+                                        <option value="Completed" selected="@(item.Status == "Completed" ? true : false)">Completed</option>
+                                        <option value="Cancelled" selected = "@(item.Status =="Cancelled" ? true : false )">Cancelled</option>
+</select>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Modal -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Order Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailsModalContent">
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Load details in the modal
+            $('#detailsModal').on('show.bs.modal', function (event) {
+                var button = $(event.relatedTarget); // Button that triggered the modal
+                var orderId = button.data('order-id'); // Extract info from data-order-id attribute
+                var modalContent = $('#detailsModalContent');
+
+                modalContent.html('<p>Loading...</p>'); // Placeholder
+
+                // Fetch order details
+                $.getJSON('/Orders/Details/' + orderId, function (data) {
+                    var content = `
+                        <h4>Order Information</h4>
+                        <p><strong>Order ID:</strong> ${data.orderId}</p>
+                        <p><strong>Order Date:</strong> ${data.orderDate}</p>
+                        <p><strong>Status:</strong> ${data.status}</p>
+                        <p><strong>Total Amount:</strong> ${data.totalAmount}</p>
+                        <h4>Customer Information</h4>
+                        <p><strong>Name:</strong> ${data.customer.firstName} ${data.customer.lastName}</p>
+                        <p><strong>Email:</strong> ${data.customer.email}</p>
+                        <h4>Order Items</h4>
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>`;
+
+                    data.items.forEach(item => {
+                        content += `
+                            <tr>
+                                <td>${item.title}</td>
+                                <td>${item.price}</td>
+                                <td>${item.quantity}</td>
+                                <td>${item.totalPrice}</td>
+                            </tr>`;
+                    });
+
+                    content += `
+                            </tbody>
+                        </table>`;
+
+                    modalContent.html(content); // Populate modal with data
+                }).fail(function () {
+                    modalContent.html('<p class="text-danger">Failed to load order details. Please try again.</p>');
+                });
+            });
+
+            // Handle status change
+            $('.status-dropdown').on('change', function () {
+                var orderId = $(this).data('order-id');
+                var newStatus = $(this).val();
+
+                // Send AJAX request to update status
+                $.ajax({
+                    url: '/Orders/ChangeStatus',
+                    method: 'POST',
+                    data: { id: orderId, status: newStatus },
+                    success: function (response) {
+                        alert('Order status updated successfully!');
+                        location.reload(); // Reload the page to update status visually
+                    },
+                    error: function () {
+                        alert('Failed to update order status. Please try again.');
+                    }
+                });
+            });
+        });
+    </script>
+}

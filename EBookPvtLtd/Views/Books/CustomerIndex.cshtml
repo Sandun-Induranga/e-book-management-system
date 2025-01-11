@@ -22,7 +22,7 @@
                         <p class="card-text text-muted"><strong>Available:</strong> @book.Quantity</p>
                         <p class="card-text"><small class="text-muted text-truncate">@book.Description</small></p>
                         <div class="d-flex justify-content-between align-items-center">
-                            <button class="btn btn-info btn-sm w-100 view-feedback" data-id="@book.BookId" data-bs-toggle="modal" data-bs-target="#feedbackModal">View Feedback</button>
+                            <button class="btn btn-info btn-sm w-100 view-feedback" data-id="@book.BookId">View Feedback</button>
                             <button class="btn btn-success btn-sm add-to-cart" data-id="@book.BookId">Add to Cart</button>
                         </div>
                     </div>
@@ -48,7 +48,7 @@
                 <!-- Feedback Section -->
                 <div id="feedbackSection" class="mb-3">
                     <h6>Customer Feedback</h6>
-                    <ul class="list-group feedback-list">
+                    <ul class="list-group feedback-list-view">
                         <!-- Feedback items will be dynamically inserted here -->
                     </ul>
                 </div>
@@ -73,6 +73,7 @@
 
 @section Scripts {
     <script>
+
         document.addEventListener('DOMContentLoaded', function () {
             // Initialize cart from localStorage or create an empty one
             const cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -93,97 +94,67 @@
 
                     // Save cart back to localStorage
                     localStorage.setItem('cart', JSON.stringify(cart));
+                    alert('Item added to cart!');
                 });
             });
+        });
 
-            // View Feedback functionality
-            document.querySelectorAll('.view-feedback').forEach(button => {
-                button.addEventListener('click', async function () {
-                    const bookId = parseInt(this.getAttribute('data-id'));
-                    document.getElementById('feedbackBookId').value = bookId;
+        // Submit Feedback functionality
+        document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
 
-                    try {
-                        // Fetch feedback for the selected book
-                        const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
-                        if (!response.ok) {
-                            throw new Error("Failed to fetch feedback.");
-                        }
+            const bookId = document.getElementById('feedbackBookId').value;
+            const customerName = document.getElementById('customerName').value;
+            const feedbackContent = document.getElementById('feedbackContent').value;
 
-                        const feedbacks = await response.json();
+            const response = await fetch('/Feedbacks/AddFeedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ BookId: bookId, CustomerName: customerName, Content: feedbackContent })
+            });
 
-                        // Update feedback list
-                        const feedbackList = document.querySelector('.feedback-list');
-                        feedbackList.innerHTML = ''; // Clear existing feedback
+            if (response.ok) {
+                alert('Feedback submitted!');
+                document.getElementById('feedbackForm').reset();
+            } else {
+                alert('Failed to submit feedback.');
+            }
+        });
 
-                        if (feedbacks.length === 0) {
-                            feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
-                        } else {
-                            feedbacks.forEach(feedback => {
-                                const listItem = document.createElement('li');
-                                listItem.classList.add('list-group-item');
-                                listItem.innerHTML = `
-                                <strong>${feedback.CustomerName}:</strong> ${feedback.Content} <small class="text-muted">(${new Date(feedback.CreatedAt).toLocaleDateString()})</small>`;
-                                feedbackList.appendChild(listItem);
-                            });
-                        }
-                    } catch (err) {
-                        console.error("Error fetching feedback:", err);
-                        alert("An error occurred while loading feedback.");
+        // View Feedback functionality
+        document.querySelectorAll('.view-feedback').forEach(button => {
+            button.addEventListener('click', async function () {
+                const bookId = parseInt(this.getAttribute('data-id'));
+                document.getElementById('feedbackBookId').value = bookId;
+
+                try {
+                    // Fetch feedback for the selected book
+                    const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch feedback.");
                     }
-                });
-            });
 
-            document.addEventListener('click', async function (e) {
-                if (e.target && e.target.classList.contains('view-feedback')) {
-                    console.log("View Feedback clicked!"); // Debugging log
+                    const feedbacks = await response.json();
 
-                    const bookId = parseInt(e.target.getAttribute('data-id'));
-                    document.getElementById('feedbackBookId').value = bookId;
+                    // Update feedback list
+                    const feedbackList = document.querySelector('.feedback-list');
+                    feedbackList.innerHTML = ''; // Clear existing feedback
 
-                    try {
-                        const response = await fetch(/Feedbacks/GetFeedback ? bookId = ${ bookId });
-                        const feedbacks = await response.json();
-
-                        const feedbackList = document.querySelector('.feedback-list');
-                        feedbackList.innerHTML = ''; // Clear existing feedback
-
-                        if (feedbacks.length === 0) {
-                            feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
-                        } else {
-                            feedbacks.forEach(feedback => {
-                                const listItem = document.createElement('li');
-                                listItem.classList.add('list-group-item');
-                                listItem.innerHTML = `<strong>${feedback.CustomerName}:</strong> ${feedback.Content}
-                                <small class="text-muted">(${new Date(feedback.CreatedAt).toLocaleDateString()})</small>`;
-                                feedbackList.appendChild(listItem);
-                            });
-                        }
-                    } catch (err) {
-                        console.error("Error fetching feedback:", err);
-                        alert("An error occurred while loading feedback.");
+                    if (feedbacks.length === 0) {
+                        feedbackList.innerHTML = '<li class="list-group-item text-muted">No feedback available for this book.</li>';
+                    } else {
+                        feedbacks.forEach(feedback => {
+                            const listItem = document.createElement('li');
+                            listItem.classList.add('list-group-item');
+                            listItem.innerHTML = `
+                                            <strong>${feedback.customerName}:</strong> ${feedback.content}
+                                            <small class="text-muted">(${new Date(feedback.createdAt).toLocaleDateString()})</small>`;
+                            feedbackList.appendChild(listItem);
+                        });
                     }
-                }
-            });
-
-            // Submit Feedback functionality
-            document.getElementById('feedbackForm').addEventListener('submit', async function (e) {
-                e.preventDefault();
-
-                const bookId = document.getElementById('feedbackBookId').value;
-                const customerName = document.getElementById('customerName').value;
-                const feedbackContent = document.getElementById('feedbackContent').value;
-
-                const response = await fetch('/Feedbacks/AddFeedback', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ BookId: bookId, CustomerName: customerName, Content: feedbackContent })
-                });
-
-                if (response.ok) {
-                    alert('Feedback submitted!');
-                    document.getElementById('feedbackForm').reset();
-                } else {
-                    alert('Failed to submit feedback.');
+                } catch (err) {
+                    console.error("Error fetching feedback:", err);
+                    alert("An error occurred while loading feedback.");
                 }
             });
         });

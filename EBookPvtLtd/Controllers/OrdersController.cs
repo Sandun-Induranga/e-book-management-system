@@ -47,23 +47,43 @@ namespace EBookPvtLtd.Controllers
             return View(orders);
         }
 
-        // GET: Orders/Details/5
-        public async Task<IActionResult> Details(int? id)
+        // GET: Orders/Details/id
+        public async Task<IActionResult> Details(int id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
-
             var order = await _context.Order
                 .Include(o => o.Customer)
-                .FirstOrDefaultAsync(m => m.OrderId == id);
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Book)
+                .FirstOrDefaultAsync(o => o.OrderId == id);
+
             if (order == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Order not found" });
             }
 
-            return View(order);
+            // Prepare the data to return as JSON
+            var orderDetails = new
+            {
+                OrderId = order.OrderId,
+                OrderDate = order.OrderDate.ToString("yyyy-MM-dd"),
+                Status = order.Status,
+                TotalAmount = order.TotalAmount.ToString("C"),
+                Customer = new
+                {
+                    order.Customer.FirstName,
+                    order.Customer.LastName,
+                    order.Customer.Email
+                },
+                Items = order.OrderItems.Select(oi => new
+                {
+                    oi.Book.Title,
+                    oi.Price,
+                    oi.Quantity,
+                    TotalPrice = (oi.Price * oi.Quantity).ToString("C")
+                })
+            };
+
+            return Json(orderDetails);
         }
 
         // GET: Orders/Create
@@ -266,6 +286,21 @@ namespace EBookPvtLtd.Controllers
             }
 
             return RedirectToAction(nameof(CustomerIndex));
+        }
+
+        [HttpPost]
+        public IActionResult ChangeStatus(int id, string status)
+        {
+            var order = _context.Order.FirstOrDefault(o => o.OrderId == id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            order.Status = status;
+            _context.SaveChanges();
+
+            return Json(new { success = true });
         }
     }
 }
